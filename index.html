@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ringo" />
+  <meta name="theme-color" content="#0f1117" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>Ringo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #141925;
+      --border: #1e2130;
+      --border2: #2a3348;
+      --accent: #c17aff;
+      --accent-dim: #7a4db3;
+      --green: #4caf82;
+      --amber: #d4a843;
+      --red: #e05c5c;
+      --text: #e8e6e0;
+      --text-mid: #9a96ae;
+      --text-dim: #4a5568;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: calc(var(--safe-top) + 16px) 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .wordmark {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+    .wordmark span { color: var(--accent); }
+
+    .btn-add {
+      background: var(--accent);
+      color: #0f1117;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── NEXT CARD ── */
+    .next-card {
+      margin: 16px 16px 6px;
+      background: linear-gradient(140deg, #1a1630 0%, #1a2035 100%);
+      border: 1px solid var(--accent-dim);
+      border-radius: 18px;
+      padding: 20px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .next-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(193,122,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .next-eyebrow {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .next-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 4px;
+    }
+    .next-meta { font-size: 13px; color: var(--text-mid); margin-bottom: 4px; }
+    .next-topics {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #9a7abf;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .btn-log {
+      margin-top: 16px;
+      background: var(--accent);
+      color: #0f1117;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 0;
+      font-weight: 700;
+      font-size: 15px;
+      width: 100%;
+      cursor: pointer;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── LIST ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 18px 20px 8px;
+    }
+    .friend-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid #13171f;
+      cursor: pointer;
+      gap: 14px;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .friend-row:active { background: #141920; }
+    .dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .row-name { font-weight: 600; font-size: 15px; flex: 1; }
+    .row-sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+    .row-time { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      padding: 70px 30px;
+      text-align: center;
+    }
+    .empty-ring {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 3px solid var(--accent-dim);
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .empty h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .empty p { font-size: 14px; color: var(--text-mid); line-height: 1.5; }
+    .empty-cta {
+      margin-top: 24px;
+      background: var(--accent);
+      color: #0f1117;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 28px;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* ── DETAIL ── */
+    .detail-header {
+      padding: calc(var(--safe-top) + 14px) 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .btn-back {
+      background: none; border: none;
+      color: var(--accent); font-size: 24px;
+      cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    .detail-name { font-size: 20px; font-weight: 800; flex: 1; letter-spacing: -0.5px; }
+    .btn-edit {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text-mid);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .badges { padding: 14px 20px 0; display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-mid);
+    }
+
+    .detail-section { padding: 20px 20px 0; }
+    .detail-section-title {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 2px; color: var(--accent);
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .field { margin-bottom: 14px; }
+    .field-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; color: var(--text-dim);
+      text-transform: uppercase; margin-bottom: 3px;
+    }
+    .field-val { font-size: 14px; color: #c8c4bc; line-height: 1.5; }
+    .divider { height: 1px; background: #13171f; margin: 20px 20px 0; }
+
+    .log-area { margin: 16px 20px 0; }
+    .log-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+    textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 13px 15px;
+      resize: none;
+      line-height: 1.5;
+      font-family: inherit;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--accent-dim); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f1117;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 0;
+      font-weight: 700;
+      font-size: 15px;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 10px;
+      letter-spacing: -0.2px;
+    }
+    .btn-secondary {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--text-mid);
+      border-radius: 12px;
+      padding: 12px 0;
+      font-size: 14px;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-danger {
+      background: none;
+      border: 1px solid #3a1f1f;
+      color: var(--red);
+      border-radius: 10px;
+      padding: 11px 0;
+      font-size: 13px;
+      width: calc(100% - 40px);
+      cursor: pointer;
+      margin: 20px 20px 0;
+      display: block;
+    }
+
+    /* ── FORM ── */
+    .form-section { padding: 20px 20px 0; }
+    .form-section-title {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 2px; color: var(--accent);
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      color: var(--text-mid); letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="date"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 12px 15px;
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus { border-color: var(--accent-dim); }
+    input::placeholder, textarea::placeholder { color: var(--text-dim); }
+
+    .pb-safe { padding-bottom: calc(var(--safe-bottom) + 30px); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 20px);
+      left: 50%; transform: translateX(-50%);
+      background: #1e2a3a;
+      border: 1px solid var(--accent-dim);
+      color: var(--text);
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "ringo-friends-v1";
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = {
+  view: "queue",      // queue | detail | edit | add
+  friends: [],
+  selected: null,
+  editing: null,
+  showLog: false,
+  logText: "",
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state.friends = JSON.parse(raw);
+  } catch {}
+}
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.friends)); } catch {}
+}
+
+function emptyFriend() {
+  return { id: Date.now(), name: "", phone: "", birthday: "", location: "", job: "", family: "", interests: "", lastContacted: "", lastNotes: "", nextTopics: "" };
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function timeAgo(d) {
+  if (!d) return "Never called";
+  const diff = Math.floor((Date.now() - new Date(d)) / 86400000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return `${diff}d ago`;
+  if (diff < 30) return `${Math.floor(diff / 7)}w ago`;
+  if (diff < 365) return `${Math.floor(diff / 30)}mo ago`;
+  return `${Math.floor(diff / 365)}y ago`;
+}
+
+function urgencyColor(d) {
+  if (!d) return "#e05c5c";
+  const diff = Math.floor((Date.now() - new Date(d)) / 86400000);
+  if (diff < 14) return "#4caf82";
+  if (diff < 35) return "#d4a843";
+  return "#e05c5c";
+}
+
+function sorted() {
+  return [...state.friends].sort((a, b) => {
+    const da = a.lastContacted ? new Date(a.lastContacted) : new Date(0);
+    const db = b.lastContacted ? new Date(b.lastContacted) : new Date(0);
+    return da - db;
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById("app");
+  if (state.view === "queue") app.innerHTML = renderQueue();
+  else if (state.view === "detail") app.innerHTML = renderDetail();
+  else if (state.view === "edit" || state.view === "add") app.innerHTML = renderForm();
+  bindEvents();
+}
+
+function renderQueue() {
+  const list = sorted();
+  const next = list[0];
+
+  let html = `
+    <div class="header">
+      <div class="wordmark">rin<span>go</span></div>
+      <button class="btn-add" onclick="openAdd()">+ Add friend</button>
+    </div>`;
+
+  if (!state.friends.length) {
+    html += `
+      <div class="empty">
+        <div class="empty-ring">○</div>
+        <h2>Your circle is empty</h2>
+        <p>Add the friends you want to stay in touch with. Ringo keeps the rotation so you never lose track.</p>
+        <button class="empty-cta" onclick="openAdd()">Add your first friend</button>
+      </div>`;
+    return html;
+  }
+
+  if (next) {
+    html += `
+      <div class="section-label">Up next</div>
+      <div class="next-card" onclick="openDetail('${next.id}')">
+        <div class="next-eyebrow">Call this commute</div>
+        <div class="next-name">${esc(next.name)}</div>
+        <div class="next-meta">${next.location ? esc(next.location) + " · " : ""}${timeAgo(next.lastContacted)}</div>
+        ${next.nextTopics ? `<div class="next-topics">💬 ${esc(next.nextTopics)}</div>` : ""}
+        <button class="btn-log" onclick="event.stopPropagation(); openDetailLog('${next.id}')">✓ Log a call</button>
+      </div>`;
+  }
+
+  if (list.length > 1) {
+    html += `<div class="section-label">Full rotation</div>`;
+    list.forEach(f => {
+      html += `
+        <div class="friend-row" onclick="openDetail('${f.id}')">
+          <div class="dot" style="background:${urgencyColor(f.lastContacted)}"></div>
+          <div style="flex:1">
+            <div class="row-name">${esc(f.name)}</div>
+            ${f.location ? `<div class="row-sub">${esc(f.location)}</div>` : ""}
+          </div>
+          <div class="row-time">${timeAgo(f.lastContacted)}</div>
+        </div>`;
+    });
+  }
+
+  html += `<div class="pb-safe"></div>`;
+  return html;
+}
+
+function renderDetail() {
+  const f = state.selected;
+  if (!f) return "";
+  const color = urgencyColor(f.lastContacted);
+
+  let html = `
+    <div class="detail-header">
+      <button class="btn-back" onclick="go('queue')">←</button>
+      <div class="detail-name">${esc(f.name)}</div>
+      <button class="btn-edit" onclick="openEdit('${f.id}')">Edit</button>
+    </div>
+    <div class="badges">
+      <span class="badge" style="color:${color};border-color:${color}33">${timeAgo(f.lastContacted)}</span>
+      ${f.location ? `<span class="badge">${esc(f.location)}</span>` : ""}
+      ${f.birthday ? `<span class="badge">🎂 ${esc(f.birthday)}</span>` : ""}
+    </div>`;
+
+  if (f.phone || f.job || f.family || f.interests) {
+    html += `<div class="detail-section"><div class="detail-section-title">About</div>`;
+    if (f.phone) html += field("Phone", f.phone);
+    if (f.job) html += field("Job", f.job);
+    if (f.family) html += field("Family", f.family);
+    if (f.interests) html += field("Interests", f.interests);
+    html += `</div>`;
+  }
+
+  html += `<div class="divider"></div>
+    <div class="detail-section">
+      <div class="detail-section-title">Last conversation</div>
+      ${field("Notes", f.lastNotes || "Nothing logged yet — call them!")}
+    </div>`;
+
+  if (f.nextTopics) {
+    html += `<div class="divider"></div>
+      <div class="detail-section">
+        <div class="detail-section-title">Topics to bring up</div>
+        <div class="field-val">${esc(f.nextTopics)}</div>
+      </div>`;
+  }
+
+  html += `<div class="divider"></div>`;
+
+  if (!state.showLog) {
+    html += `
+      <div style="padding:16px 20px 0">
+        <button class="btn-primary" onclick="showLogPanel()">✓ Log a call</button>
+      </div>`;
+  } else {
+    html += `
+      <div class="log-area">
+        <div class="log-label">Call notes</div>
+        <textarea id="log-input" rows="4" placeholder="What did you catch up on? Anything to follow up next time...">${esc(state.logText)}</textarea>
+        <button class="btn-primary" onclick="logCall()">Save & move to bottom of rotation</button>
+        <button class="btn-secondary" onclick="hideLog()">Cancel</button>
+      </div>`;
+  }
+
+  html += `
+    <button class="btn-danger" onclick="deleteFriend('${f.id}')">Remove from rotation</button>
+    <div class="pb-safe"></div>`;
+  return html;
+}
+
+function field(label, val) {
+  return `<div class="field"><div class="field-label">${esc(label)}</div><div class="field-val">${esc(val)}</div></div>`;
+}
+
+function renderForm() {
+  const isNew = state.view === "add";
+  const e = state.editing;
+
+  return `
+    <div class="detail-header">
+      <button class="btn-back" onclick="${isNew ? "go('queue')" : `openDetail('${e.id}')`}">←</button>
+      <div class="detail-name">${isNew ? "New friend" : "Edit · " + esc(e.name)}</div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Basics</div>
+      ${formInput("Name", "name", "Full name", e.name)}
+      ${formInput("Phone", "phone", "+1 555 000 0000", e.phone)}
+      ${formInput("Location", "location", "City, State", e.location)}
+      ${formInput("Birthday", "birthday", "e.g. June 3", e.birthday)}
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-section" style="margin-top:0; padding-top:20px">
+      <div class="form-section-title">About them</div>
+      ${formInput("Job / Career", "job", "What do they do?", e.job)}
+      ${formTextarea("Family & relationship", "family", "Partner, kids, pets...", e.family)}
+      ${formTextarea("Interests & hobbies", "interests", "What do they love talking about?", e.interests)}
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-section" style="margin-top:0; padding-top:20px">
+      <div class="form-section-title">Conversation</div>
+      ${formTextarea("Last call notes", "lastNotes", "What did you talk about last time?", e.lastNotes)}
+      ${formTextarea("Topics to bring up next", "nextTopics", "Questions to ask, things to follow up on...", e.nextTopics)}
+      ${formInput("Last contacted (YYYY-MM-DD)", "lastContacted", "2024-06-01", e.lastContacted)}
+    </div>
+
+    <div style="padding: 0 20px; margin-top: 24px">
+      <button class="btn-primary" onclick="${isNew ? "saveAdd()" : "saveEdit()"}" ${!e.name ? "disabled style='opacity:0.4'" : ""}>${isNew ? "Add to rotation" : "Save changes"}</button>
+      <button class="btn-secondary" onclick="${isNew ? "go('queue')" : `openDetail('${e.id}')`}">Cancel</button>
+    </div>
+    <div class="pb-safe"></div>`;
+}
+
+function formInput(label, field, placeholder, val) {
+  return `
+    <div class="form-field">
+      <label class="form-label">${esc(label)}</label>
+      <input type="text" placeholder="${esc(placeholder)}" value="${esc(val)}"
+        oninput="updateEditing('${field}', this.value)" />
+    </div>`;
+}
+
+function formTextarea(label, field, placeholder, val) {
+  return `
+    <div class="form-field">
+      <label class="form-label">${esc(label)}</label>
+      <textarea rows="3" placeholder="${esc(placeholder)}"
+        oninput="updateEditing('${field}', this.value)">${esc(val)}</textarea>
+    </div>`;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function go(view) { state.view = view; state.showLog = false; render(); }
+
+function openAdd() {
+  state.editing = emptyFriend();
+  state.view = "add";
+  render();
+}
+
+function openDetail(id) {
+  state.selected = state.friends.find(f => f.id == id) || null;
+  state.showLog = false;
+  state.logText = "";
+  state.view = "detail";
+  render();
+}
+
+function openDetailLog(id) {
+  state.selected = state.friends.find(f => f.id == id) || null;
+  state.showLog = true;
+  state.logText = "";
+  state.view = "detail";
+  render();
+  setTimeout(() => document.getElementById("log-input")?.focus(), 100);
+}
+
+function openEdit(id) {
+  const f = state.friends.find(f => f.id == id);
+  state.editing = { ...f };
+  state.view = "edit";
+  render();
+}
+
+function updateEditing(field, val) {
+  state.editing[field] = val;
+  // Re-enable save button live
+  const btn = document.querySelector(".btn-primary");
+  if (btn && field === "name") {
+    btn.disabled = !val;
+    btn.style.opacity = val ? "1" : "0.4";
+  }
+}
+
+function saveAdd() {
+  if (!state.editing.name.trim()) return;
+  state.friends.push({ ...state.editing });
+  save();
+  showToast(`${state.editing.name} added to your rotation`);
+  state.view = "queue";
+  render();
+}
+
+function saveEdit() {
+  state.friends = state.friends.map(f => f.id === state.editing.id ? { ...state.editing } : f);
+  save();
+  state.selected = { ...state.editing };
+  showToast("Saved");
+  state.view = "detail";
+  render();
+}
+
+function showLogPanel() { state.showLog = true; render(); setTimeout(() => document.getElementById("log-input")?.focus(), 100); }
+function hideLog() { state.showLog = false; render(); }
+
+function logCall() {
+  const notes = document.getElementById("log-input")?.value || state.logText;
+  const today = new Date().toISOString().split("T")[0];
+  state.friends = state.friends.map(f =>
+    f.id === state.selected.id
+      ? { ...f, lastContacted: today, lastNotes: notes || f.lastNotes }
+      : f
+  );
+  save();
+  state.selected = { ...state.selected, lastContacted: today, lastNotes: notes || state.selected.lastNotes };
+  state.showLog = false;
+  state.logText = "";
+  showToast(`Call with ${state.selected.name} logged ✓`);
+  render();
+}
+
+function deleteFriend(id) {
+  const f = state.friends.find(x => x.id == id);
+  if (!confirm(`Remove ${f?.name} from your rotation?`)) return;
+  state.friends = state.friends.filter(x => x.id != id);
+  save();
+  state.view = "queue";
+  render();
+}
+
+function bindEvents() {
+  // Sync textarea values on input (for log panel persistence)
+  const logInput = document.getElementById("log-input");
+  if (logInput) logInput.addEventListener("input", e => { state.logText = e.target.value; });
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+load();
+render();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
