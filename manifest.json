@@ -2,7 +2,7 @@
   "name": "Ringo",
   "short_name": "Ringo",
   "description": "Stay in the circle. A friend rotation app.",
-  "start_url": "/",
+  "start_url": "/Ringo/",
   "display": "standalone",
   "background_color": "#0f1117",
   "theme_color": "#0f1117",
